@@ -1,0 +1,74 @@
+.day-cell {
+  aspect-ratio: 1;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 80px;
+}
+
+.day-cell:hover {
+  border-color: var(--day-color, #667eea);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.day-cell.today {
+  border-color: #667eea;
+  border-width: 3px;
+  background: #f5f5ff;
+}
+
+.day-cell.selected {
+  border-color: #667eea;
+  border-width: 3px;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.day-cell.weekend {
+  background: #fafafa;
+}
+
+.day-cell.holiday {
+  background: #fff3e0;
+}
+
+.day-number {
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.day-type-badge {
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.day-holiday-indicator {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 12px;
+}
+
+.day-cell.empty {
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
+.day-cell.empty:hover {
+  transform: none;
+  box-shadow: none;
+}

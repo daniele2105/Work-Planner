@@ -12,7 +12,7 @@ interface LoginProps {
 export function Login({ data, onLogin, onSetPassword }: LoginProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isSettingPassword, setIsSettingPassword] = useState(!data.password);
+  const [isSettingPassword] = useState(!data.password);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 

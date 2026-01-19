@@ -1,64 +1,58 @@
 import { startOfMonth, endOfMonth, eachDayOfInterval, getDay, format } from 'date-fns';
-import { it } from 'date-fns/locale/it';
-import { DayData, MonthlyStats } from '../types';
+import it from 'date-fns/locale/it';
+import { AppData, MonthlyStats, DayType } from '../types';
 import { isItalianHoliday, isCustomHoliday, getHolidayName } from './holidays';
 import { getDayData, formatDate } from './storage';
-import { AppData } from '../types';
+
+const TYPE_LABEL: Record<DayType, string> = {
+  smart: 'Smart Working',
+  office: 'Ufficio',
+  holiday: 'Ferie',
+  'non-working': 'Non Lavorativo',
+};
 
 export function calculateMonthlyStats(year: number, month: number, data: AppData): MonthlyStats {
   const start = startOfMonth(new Date(year, month, 1));
   const end = endOfMonth(start);
   const days = eachDayOfInterval({ start, end });
-  
+
   let totalDays = 0;
-  let workingDays = 0;
+  let workingDays = 0; // potential working days: Mon-Fri excluding holidays (national + custom)
   let smartDays = 0;
   let officeDays = 0;
-  let holidayDays = 0;
-  let nonWorkingDays = 0;
-  
-  days.forEach(date => {
-    totalDays++;
-    const dayData = getDayData(date, data);
-    const dayOfWeek = getDay(date);
-    
-    // Check if it's a weekend (Saturday = 6, Sunday = 0)
+  let holidayDays = 0; // FERIE
+  let nonWorkingDays = 0; // weekends + national/custom holidays + explicit non-working
+
+  days.forEach((date) => {
+    totalDays += 1;
+
+    const dayOfWeek = getDay(date); // 0=Sun..6=Sat
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-    
-    // Check if it's a holiday (national or custom)
+
     const isNationalHoliday = isItalianHoliday(date);
     const customHoliday = isCustomHoliday(date, data.customHolidays);
     const isHoliday = isNationalHoliday || !!customHoliday;
-    
-    // Determine actual type
-    let actualType = dayData.type;
-    
-    // If it's a holiday or weekend, it's non-working unless explicitly set
-    if ((isHoliday || isWeekend) && !dayData.type) {
-      actualType = 'non-working';
+
+    const dayData = getDayData(date, data);
+
+    // Potential working day (Mon-Fri excluding holidays)
+    if (!isWeekend && !isHoliday) {
+      workingDays += 1;
     }
-    
-    switch (actualType) {
-      case 'smart':
-        smartDays++;
-        workingDays++;
-        break;
-      case 'office':
-        officeDays++;
-        workingDays++;
-        break;
-      case 'holiday':
-        holidayDays++;
-        break;
-      case 'non-working':
-      default:
-        nonWorkingDays++;
-        break;
+
+    // Count explicit day types
+    if (dayData?.type === 'smart') smartDays += 1;
+    else if (dayData?.type === 'office') officeDays += 1;
+    else if (dayData?.type === 'holiday') holidayDays += 1;
+
+    // Non-working bucket (weekend OR holiday OR explicit non-working)
+    if (isWeekend || isHoliday || dayData?.type === 'non-working') {
+      nonWorkingDays += 1;
     }
   });
-  
+
   const smartQuotaExceeded = smartDays > 12;
-  
+
   return {
     totalDays,
     workingDays,
@@ -74,34 +68,29 @@ export function exportToCSV(year: number, month: number, data: AppData): string 
   const start = startOfMonth(new Date(year, month, 1));
   const end = endOfMonth(start);
   const days = eachDayOfInterval({ start, end });
-  
-  const headers = ['Data', 'Giorno', 'Tipo', 'Festività'];
-  const rows: string[][] = [headers];
-  
-  days.forEach(date => {
-    const dayData = getDayData(date, data);
-    const dateStr = format(date, 'dd/MM/yyyy', { locale: it });
-    const dayName = format(date, 'EEEE', { locale: it });
-    const typeMap: Record<string, string> = {
-      'smart': 'Smart Working',
-      'office': 'Ufficio',
-      'holiday': 'Ferie',
-      'non-working': 'Non Lavorativo',
-    };
-    const typeStr = typeMap[dayData.type] || 'Non Lavorativo';
-    
-    // Check for holidays
+
+  const header = ['Data', 'Giorno', 'Tipo', 'Festivo', 'NomeFestivita'].join(',');
+
+  const rows = days.map((date) => {
+    const dateISO = formatDate(date);
+    const weekdayName = format(date, 'EEEE', { locale: it });
+
     const isNationalHoliday = isItalianHoliday(date);
     const customHoliday = isCustomHoliday(date, data.customHolidays);
-    let holidayStr = '';
-    if (isNationalHoliday) {
-      holidayStr = getHolidayName(date) || 'Festività';
-    } else if (customHoliday) {
-      holidayStr = customHoliday.name;
-    }
-    
-    rows.push([dateStr, dayName, typeStr, holidayStr]);
+    const isHoliday = isNationalHoliday || !!customHoliday;
+
+    const holidayName = isNationalHoliday ? getHolidayName(date) : customHoliday?.name ?? '';
+
+    const dayData = getDayData(date, data);
+    const tipo = isHoliday ? 'Festività' : (dayData?.type ? TYPE_LABEL[dayData.type] : '');
+
+    const festivo = isHoliday ? 'S' : 'N';
+
+    // CSV safe: wrap fields with quotes, escape quotes
+    const esc = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+
+    return [dateISO, weekdayName, tipo, festivo, holidayName].map(esc).join(',');
   });
-  
-  return rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+  return [header, ...rows].join('\n');
 }

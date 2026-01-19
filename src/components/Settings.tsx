@@ -25,7 +25,8 @@ export function Settings({ data, onDataChange, onPasswordChange, onLogout }: Set
   const [newHolidayName, setNewHolidayName] = useState('');
   const [newHolidayMonth, setNewHolidayMonth] = useState(1);
   const [newHolidayDay, setNewHolidayDay] = useState(1);
-  const [currentPassword, setCurrentPassword] = useState('');
+  // currentPassword removed (unused in UI)
+
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -74,7 +75,6 @@ export function Settings({ data, onDataChange, onPasswordChange, onLogout }: Set
       return;
     }
     onPasswordChange(newPassword);
-    setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
     alert('Password cambiata con successo');

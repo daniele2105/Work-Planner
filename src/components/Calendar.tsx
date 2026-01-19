@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { startOfMonth, endOfMonth, eachDayOfInterval, format, getDay, addMonths, subMonths, isToday } from 'date-fns';
-import { it } from 'date-fns/locale/it';
+import it from 'date-fns/locale/it';
 import { AppData, DayType } from '../types';
 import { getDayData, setDayData, formatDate } from '../utils/storage';
 import { isItalianHoliday, getHolidayName, isCustomHoliday } from '../utils/holidays';
@@ -101,7 +101,7 @@ export function Calendar({ data, onDataChange, onDateChange }: CalendarProps) {
                 holidayName={holidayName}
                 isWeekend={isWeekend}
                 isToday={isToday(date)}
-                isSelected={selectedDate && formatDate(selectedDate) === formatDate(date)}
+                isSelected={selectedDate ? formatDate(selectedDate) === formatDate(date) : false}
                 onClick={() => handleDayClick(date)}
                 onTypeChange={(type) => handleDayTypeChange(date, type)}
               />

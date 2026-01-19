@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { format, getMonth, getYear } from 'date-fns';
+import { getMonth, getYear } from 'date-fns';
 import { AppData } from '../types';
 import { calculateMonthlyStats, exportToCSV } from '../utils/stats';
 import './Stats.css';
